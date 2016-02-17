@@ -93,5 +93,7 @@ $.ajax({
 
 		computeCoreValues();
 
+		console.log(coreValues);
+
 	}
 });
