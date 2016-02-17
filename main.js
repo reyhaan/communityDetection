@@ -70,6 +70,31 @@ var computeCoreValues = function() {
 	}
 };
 
+var getSimilarityIndex = function(u, v) {
+
+	var Tu = [],
+		Tv = [];
+
+	var TuIn = getInEdges(u);
+	var TuOut = getOutEdges(u);
+	Tu = TuIn;
+	Tu.push(TuOut);
+	Tu.push(u);
+
+	var TvIn = getInEdges(v);
+	var TvOut = getOutEdges(v);
+	Tv = TvIn;
+	Tv.push(TvOut);
+	Tv.push(v);
+
+	var numerator = getIntersection(Tu, Tv);
+
+	var denominator = Math.pow((Tu.length * Tv.length), 0.5);
+
+	return numerator/denominator;
+
+}
+
 // Load the directed acyclic graph file
 $.ajax({
 	url: "dag.txt",
