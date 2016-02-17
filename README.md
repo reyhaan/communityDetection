@@ -4,3 +4,8 @@ To run this algorithm, just point the php server to this folder and index.html f
 
 To see the results, open localhost in Google Chrome. The results will be displayed in the console which is present in DevTools.
 
+To find similarity index of any 2 nodes, type this in console:
+
+getSimilarityIndex(u , v)
+
+where u,v are any 2 nodes.
