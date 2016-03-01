@@ -92,6 +92,13 @@ var getInitialCommunity = function() {
 	community.push.apply(community, (getOutEdges(maxIndegreeVertex)));
 	community.push(maxIndegreeVertex);
 
+	// filter 0 (zero)
+	for(var i = community.length - 1; i >= 0; i--) {
+    	if(community[i] === 0) {
+       		community.splice(i, 1);
+    	}
+	}
+
 	return community;
 
 }
