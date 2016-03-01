@@ -74,7 +74,11 @@ var getCoreValues = function() {
 
 var getCompactness = function(v, c) {
 	var denominator = getOutEdges(v).length + 1;
+	var vertexOutEdges = getOutEdges(v);
+	var similarVertex = getIntersection(vertexOutEdges, c);
+	var numerator = similarVertex + 1;
 	console.log(denominator);
+	return numerator/denominator;
 };
 
 var getInitialCommunity = function() {
@@ -82,24 +86,39 @@ var getInitialCommunity = function() {
 	var inDegrees = [];
 	var maxInDegree = 0;
 	var community = [];
+	var allInitialCommunities = [];
+	var centralNodes = [];
 	for(var i = 1; i <= getTotalNodes(src); i++) {
 		inDegrees.push(getInEdges(i).length);
 	}
 
-	var maxIndegreeVertex = inDegrees.indexOf(Math.max.apply(Math, inDegrees)) + 1;
+	maxInDegree = Math.max(...inDegrees);
 
-	community = getInEdges(maxIndegreeVertex);
-	community.push.apply(community, (getOutEdges(maxIndegreeVertex)));
-	community.push(maxIndegreeVertex);
-
-	// filter 0 (zero)
-	for(var i = community.length - 1; i >= 0; i--) {
-    	if(community[i] === 0) {
-       		community.splice(i, 1);
-    	}
+	/*
+	 * Find central nodes around which initial community is calculated at first.
+	 * Control this loop to get the expected central nodes.
+	 */
+	for(var i=0; i < inDegrees.length; i++) {
+		if(maxInDegree == inDegrees[i]) {
+			centralNodes.push(i+1);
+		}
 	}
 
-	return community;
+	// Do calculations for each central node
+	for(var i=0; i<centralNodes.length; i++) {
+		community = getInEdges(centralNodes[i]);
+		community.push.apply(community, (getOutEdges(centralNodes[i])));
+		community.push(centralNodes[i]);
+		// filter 0 (zero)
+		for(var j = community.length - 1; j >= 0; j--) {
+	    	if(community[j] === 0) {
+	       		community.splice(j, 1);
+	    	}
+		}
+		allInitialCommunities.push(community);
+	}
+
+	return allInitialCommunities;
 
 }
 
