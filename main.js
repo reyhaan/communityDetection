@@ -1,7 +1,6 @@
 // Global variables holding source node and destination node having an edge between them
 var src = [];
 var dst = [];
-var coreValues = {};
 
 var getTotalNodes = function(src) {
 	return Math.max(...src);
@@ -58,7 +57,8 @@ var getIntersection = function(a, b) {
 	return result.length;
 }
 
-var computeCoreValues = function() {
+var getCoreValues = function() {
+	var coreValues = [];
 	for(var i = 1; i <= getTotalNodes(src); i++) {
 		var inEdges = getInEdges(i);
 		var coreValue = 0;
@@ -66,9 +66,35 @@ var computeCoreValues = function() {
 			coreValue += ((getIntersection(inEdges, getInEdges(inEdges[j]))) / inEdges.length);
 		}
 
-		coreValues[i] = coreValue;
+		coreValues.push(coreValue);
 	}
+
+	return coreValues;
 };
+
+var getCompactness = function(v, c) {
+	var denominator = getOutEdges(v).length + 1;
+	console.log(denominator);
+};
+
+var getInitialCommunity = function() {
+	// create nodes array
+	var inDegrees = [];
+	var maxInDegree = 0;
+	var community = [];
+	for(var i = 1; i <= getTotalNodes(src); i++) {
+		inDegrees.push(getInEdges(i).length);
+	}
+
+	var maxIndegreeVertex = inDegrees.indexOf(Math.max.apply(Math, inDegrees)) + 1;
+
+	community = getInEdges(maxIndegreeVertex);
+	community.push.apply(community, (getOutEdges(maxIndegreeVertex)));
+	community.push(maxIndegreeVertex);
+
+	return community;
+
+}
 
 var getSimilarityIndex = function(u, v) {
 
@@ -78,13 +104,13 @@ var getSimilarityIndex = function(u, v) {
 	var TuIn = getInEdges(u);
 	var TuOut = getOutEdges(u);
 	Tu = TuIn;
-	Tu.push(TuOut);
+	Tu.push.apply(Tu, TuOut);
 	Tu.push(u);
 
 	var TvIn = getInEdges(v);
 	var TvOut = getOutEdges(v);
 	Tv = TvIn;
-	Tv.push(TvOut);
+	Tv.push.apply(Tv, TvOut);
 	Tv.push(v);
 
 	var numerator = getIntersection(Tu, Tv);
@@ -116,9 +142,17 @@ $.ajax({
 
 		});
 
-		computeCoreValues();
+		var computedCoreValues = getCoreValues();
 
-		console.log(coreValues);
+		// Display the core values in console.
+		console.log(computedCoreValues);
+
+		// Sort the core values array in decreasing order.
+		computedCoreValues.sort(function(a, b){return b-a});
+
+		// Find initial community
+		console.log(src)
+		console.log(dst)
 
 	}
 });
