@@ -2,6 +2,9 @@
 var src = [];
 var dst = [];
 
+var Bc = 0.5; // Compactness threshold
+var Bl = 0.4;
+
 var getTotalNodes = function(src) {
 	return Math.max(...src);
 };
@@ -38,6 +41,28 @@ var getOutEdges = function(node) {
 
 	return outEdges;
 
+};
+
+var getNeighbours = function(node) {
+	var Tin = getInEdges(node);
+	var Tout = getOutEdges(node);
+	var nb = Tin;
+	nb.push.apply(nb, Tout);
+	return nb;
+};
+
+// na = neighbour array containing neighbours of each vertex in the community
+var getCommunityNeighbours = function(c, na) {
+	for(var i=0; i<na.length; i++) {
+		na[i] = na[i].filter(function(val) {
+  			return c.indexOf(val) == -1;
+		});
+	}
+	mergedArray = [];
+	for(var j=0; j<na.length; j++) {
+		mergedArray = _.union(mergedArray, na[j]);
+	}
+	return mergedArray;
 };
 
 var getIntersection = function(an, bn) {
@@ -83,7 +108,6 @@ var getCompactness = function(v, c) {
 	var vertexOutEdges = getOutEdges(v);
 	var similarVertex = getIntersection(vertexOutEdges, c);
 	var numerator = similarVertex + 1;
-	console.log(denominator);
 	return numerator/denominator;
 };
 
@@ -95,7 +119,7 @@ var filterCommunity = function(c) {
 		var similarVertex = getIntersection(vertexOutEdges, c);
 		var numerator = similarVertex + 1;
 		compactness = numerator/denominator;
-		if(compactness > 0.5) {
+		if(compactness > Bc) {
 			filteredCommunity.push(c[i]);
 		}
 	}
@@ -103,12 +127,21 @@ var filterCommunity = function(c) {
 };
 
 var getInitialCommunities = function() {
+
 	// create nodes array
 	var inDegrees = [];
 	var maxInDegree = 0;
 	var community = [];
 	var allInitialCommunities = [];
 	var centralNodes = [];
+
+	/*
+	 * We assume the nodes are labelled in increasing order so we just get the max
+	 * label and run a loop from 1 to max and treat every index in the loop as a node
+	 *
+	 * getTotalNodes(src) signifoes we are getting the total nodes in the network
+	 *
+	 */
 	for(var i = 1; i <= getTotalNodes(src); i++) {
 		inDegrees.push(getInEdges(i).length);
 	}
@@ -144,9 +177,60 @@ var getInitialCommunities = function() {
 
 }
 
+function nbForAllCommunities(c) {
+
+	var nbForEachCommunity = [];
+
+	// Expand each of the initial communities
+	for(var i=0; i<c.length; i++) {
+
+		var nbOfEachVertex = [];
+
+		// Find neighbours of each vertex in the community
+		for(var j=0; j<c[i].length; j++) {
+			nbOfEachVertex.push(getNeighbours(c[i][j]));
+		}
+		nbForEachCommunity.push(getCommunityNeighbours(c[i], nbOfEachVertex));
+	}
+
+	return nbForEachCommunity;
+
+};
+
 var expandCommunities = function(c) {
 
-}
+	var Nv = [];
+	var Nlv = [];
+
+	var nbForEachCommunity = nbForAllCommunities(c);
+
+	for(var i=0; i<nbForEachCommunity.length; i++) {
+		var nbList = nbForEachCommunity[i];
+		for(var j=0; j<nbList.length; j++) {
+			var compactness = getCompactness(nbList[j], c[i]);
+			if(compactness > Bc) {
+				Nv.push(nbList[j]);
+			} else if(compactness <= Bc && compactness >= Bl) {
+				Nlv.push(nbList[j]);
+			}
+		}
+
+		if(Nv.length != 0) {
+			c[i].push.apply(c[i], Nv);
+			expandCommunities(c);
+		}
+
+		if(Nlv.length != 0) {
+			c[i].push.apply(c[i], Nlv);
+			expandCommunities(c)
+		}
+
+		if(Nv == 0 && Nlv == 0) {
+			return c;
+		}
+
+	}
+};
 
 var getSimilarityIndex = function(u, v) {
 
@@ -205,7 +289,7 @@ $.ajax({
 		// Find initial community
 		var initialCommunities = getInitialCommunities();
 
-		expandCommunities(initialCommunities);
+		var c = expandCommunities(initialCommunities);
 
 	}
 });
