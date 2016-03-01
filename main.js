@@ -13,7 +13,9 @@ var getInEdges = function(node) {
 
 	for(var i = 0; i < dst.length; i++) {
 		if(node == dst[i]) {
-			inEdges.push(src[i]);
+			if(src[i] != 0) {
+				inEdges.push(src[i]);
+			}
 		}
 	}
 
@@ -28,7 +30,9 @@ var getOutEdges = function(node) {
 
 	for(var i = 0; i < src.length; i++) {
 		if(node == src[i]) {
-			outEdges.push(dst[i]);
+			if(dst[i] != 0) {
+				outEdges.push(dst[i]);
+			}
 		}
 	}
 
@@ -36,9 +40,11 @@ var getOutEdges = function(node) {
 
 };
 
-var getIntersection = function(a, b) {
-	a.sort();
-	b.sort();
+var getIntersection = function(an, bn) {
+	var a = an.slice(0);
+	var b = bn.slice(0);
+	a.sort(function(a, b){return a-b});
+	b.sort(function(a, b){return a-b});
 	var ai=0, bi=0;
 	var result = new Array();
 
@@ -81,7 +87,22 @@ var getCompactness = function(v, c) {
 	return numerator/denominator;
 };
 
-var getInitialCommunity = function() {
+var filterCommunity = function(c) {
+	var filteredCommunity = [];
+	for(var i=0; i<c.length; i++) {
+		var denominator = getOutEdges(c[i]).length + 1;
+		var vertexOutEdges = getOutEdges(c[i]);
+		var similarVertex = getIntersection(vertexOutEdges, c);
+		var numerator = similarVertex + 1;
+		compactness = numerator/denominator;
+		if(compactness > 0.5) {
+			filteredCommunity.push(c[i]);
+		}
+	}
+	return filteredCommunity;
+};
+
+var getInitialCommunities = function() {
 	// create nodes array
 	var inDegrees = [];
 	var maxInDegree = 0;
@@ -115,10 +136,15 @@ var getInitialCommunity = function() {
 	       		community.splice(j, 1);
 	    	}
 		}
+		community = filterCommunity(community);
 		allInitialCommunities.push(community);
 	}
 
 	return allInitialCommunities;
+
+}
+
+var expandCommunities = function(c) {
 
 }
 
@@ -177,8 +203,9 @@ $.ajax({
 		computedCoreValues.sort(function(a, b){return b-a});
 
 		// Find initial community
-		console.log(src)
-		console.log(dst)
+		var initialCommunities = getInitialCommunities();
+
+		expandCommunities(initialCommunities);
 
 	}
 });
