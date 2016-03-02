@@ -5,6 +5,9 @@ var dst = [];
 var Bc = 0.5; // Compactness threshold
 var Bl = 0.4;
 
+// Make this variable global so that at every point we know what central nodes are in consideration.
+var centralNodes = [];
+
 var getTotalNodes = function(src) {
 	return Math.max(...src);
 };
@@ -133,7 +136,6 @@ var getInitialCommunities = function() {
 	var maxInDegree = 0;
 	var community = [];
 	var allInitialCommunities = [];
-	var centralNodes = [];
 
 	/*
 	 * We assume the nodes are labelled in increasing order so we just get the max
@@ -210,26 +212,34 @@ var expandCommunities = function(c) {
 			var compactness = getCompactness(nbList[j], c[i]);
 			if(compactness > Bc) {
 				Nv.push(nbList[j]);
-			} else if(compactness <= Bc && compactness >= Bl) {
+			} else if(compactness < Bc && compactness >= Bl) {
 				Nlv.push(nbList[j]);
 			}
 		}
 
+		// Remove central nodes as they can't be a part of neighbours
+		Nv = _.difference(Nv, centralNodes);
+		Nlv = _.difference(Nlv, centralNodes);
+
 		if(Nv.length != 0) {
 			c[i].push.apply(c[i], Nv);
+			Nv = [];
 			expandCommunities(c);
 		}
 
 		if(Nlv.length != 0) {
 			c[i].push.apply(c[i], Nlv);
+			Nlv = [];
 			expandCommunities(c)
 		}
 
 		if(Nv == 0 && Nlv == 0) {
-			return c;
+			return;
 		}
 
 	}
+
+	return;
 };
 
 var getSimilarityIndex = function(u, v) {
@@ -257,6 +267,14 @@ var getSimilarityIndex = function(u, v) {
 
 }
 
+function getCommonNodes(c1, c2) {
+	var intersection = _.intersection(c1, c2);
+	return intersection;
+}
+
+// Variable holding the object notation of array containing all the communities array.
+var com;
+
 // Load the directed acyclic graph file
 $.ajax({
 	url: "dag.txt",
@@ -281,7 +299,7 @@ $.ajax({
 		var computedCoreValues = getCoreValues();
 
 		// Display the core values in console.
-		console.log(computedCoreValues);
+		console.log("Computed core values: ", computedCoreValues);
 
 		// Sort the core values array in decreasing order.
 		computedCoreValues.sort(function(a, b){return b-a});
@@ -289,7 +307,20 @@ $.ajax({
 		// Find initial community
 		var initialCommunities = getInitialCommunities();
 
-		var c = expandCommunities(initialCommunities);
+		expandCommunities(initialCommunities);
+
+		for(var i=0; i<initialCommunities.length; i++) {
+			initialCommunities[i] = _.uniq(initialCommunities[i]);
+		}
+
+		com = initialCommunities.reduce(function(o, v, i) {
+  			o[i] = v;
+  			return o;
+		}, {});
+
+		console.log("List of communities: ", com);
+
+		console.log("To get common nodes, call 'getCommonNodes(com[0], com[1])'");
 
 	}
 });
