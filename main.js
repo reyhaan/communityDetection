@@ -111,7 +111,7 @@ var getCoreValues = function() {
 			coreValue += ((getIntersection(inEdges, getInEdges(inEdges[j]))) / inEdges.length);
 		}
 
-		coreValues.push(coreValue);
+		coreValues.push(parseFloat(coreValue.toFixed(2)));
 	}
 
 	return coreValues;
@@ -324,7 +324,8 @@ $.ajax({
 		var computedCoreValues = getCoreValues();
 
 		// Display the core values in console.
-		console.log("Computed core values: ", computedCoreValues);
+		computedCoreValuesObject = {"core Values": computedCoreValues};
+		console.log("Computed core values: ", computedCoreValuesObject);
 
 		// Sort the core values array in decreasing order.
 		computedCoreValues.sort(function(a, b){return b-a});
@@ -367,7 +368,9 @@ $.ajax({
 
 		console.log("List of communities: ", com);
 
-		console.log("To get common nodes, call 'getCommonNodes(com[0], com[1])'");
+		// console.log("To get common nodes, call 'getCommonNodes(com[0], com[1])'");
+
+		console.log("call 'compare()' function to calculate performance parameters:");
 
 	}
 });
