@@ -85,7 +85,7 @@ var getSimilarArray = function(gen_nodes, rsm_nodes, target_node) {
 		}
 	}
 
-	console.log(similar_index_object);
+	// console.log(similar_index_object);
 
 	// loop over similarity index object and find the greatest index.
 	for(var index in similar_index_object) {
@@ -102,8 +102,8 @@ var getSimilarArray = function(gen_nodes, rsm_nodes, target_node) {
 			shortest_length = similar_index_object[comparison_index][i];
 		}
 	}
-	console.log(similar_array);
-	console.log(rsm_nodes);
+	// console.log(similar_array);
+	// console.log(rsm_nodes);
 	return rsm_nodes[shortest_length];
 
 };
@@ -136,8 +136,8 @@ var compare = function() {
 			var fd = getSimilarArray(gen_nodes['1'], rsm_nodes, 2);
 			var fr = gen_nodes['1'];
 
-			console.log(fd);
-			console.log(fr);
+			// console.log(fd);
+			// console.log(fr);
 			console.log(calculate(fd, fr));
 
 
