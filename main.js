@@ -8,6 +8,17 @@ var Bl = 0.4;
 // Make this variable global so that at every point we know what central nodes are in consideration.
 var centralNodes = [];
 
+// var preProcessInputData = function(data) {
+// 	// Create javaScript object as key -> Value pair of each edge
+// 	data = data.split('\n');
+// 	var processedData = {};
+// 	$.each(data, function(index, value) {
+// 		value = value.split('\t');
+// 		processedData[index] = [value[0], value[1]];
+// 	});
+// 	return processedData;
+// }
+
 var getTotalNodes = function(src) {
 	return Math.max(...src);
 };
@@ -160,6 +171,18 @@ var getInitialCommunities = function() {
 		}
 	}
 
+	var currentCoreValues = getCoreValues();
+
+	var maxCoreValue = Math.max(...currentCoreValues);
+
+	var toleranceFactor = 0.15;
+
+	for(var i=0; i < currentCoreValues.length; i++) {
+		if((maxCoreValue > (currentCoreValues[i]-toleranceFactor)) && (maxCoreValue < (currentCoreValues[i]+toleranceFactor))) {
+			// centralNodes.push(i+1);
+		}
+	}
+
 	// Do calculations for each central node
 	for(var i=0; i<centralNodes.length; i++) {
 		community = getInEdges(centralNodes[i]);
@@ -212,7 +235,7 @@ var expandCommunities = function(c) {
 			var compactness = getCompactness(nbList[j], c[i]);
 			if(compactness > Bc) {
 				Nv.push(nbList[j]);
-			} else if(compactness < Bc && compactness >= Bl) {
+			} else if(compactness <= Bc && compactness >= Bl) {
 				Nlv.push(nbList[j]);
 			}
 		}
@@ -277,8 +300,10 @@ var com;
 
 // Load the directed acyclic graph file
 $.ajax({
-	url: "dag.txt",
+	url: "../directed_networks/network_100.dat",
 	success: function (data) {
+
+		// preProcessInputData(data);
 
 		data = data.split('\n');
 
@@ -317,6 +342,28 @@ $.ajax({
   			o[i] = v;
   			return o;
 		}, {});
+
+		var data = '';
+
+		for (var key in com) {
+			if (com.hasOwnProperty(key)) {
+		    	var obj = com[key];
+		    	for (var prop in obj) {
+		        	if (obj.hasOwnProperty(prop)) {
+		            	data = data + obj.join("\n") + "\n#\n";
+		        	}
+		    	}
+			}
+		}
+
+		$.ajax({
+			url: "write_communities.php",
+			method: "POST",
+			data: {data: data},
+			success: function(data) {
+				console.log(data);
+			}
+		})
 
 		console.log("List of communities: ", com);
 
