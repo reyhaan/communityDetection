@@ -1,3 +1,7 @@
+// Set the default method for community expansion
+var bySimilarity = 1;
+var byCompactness = 0;
+
 // Global variables holding source node and destination node having an edge between them
 var src = [];
 var dst = [];
@@ -175,7 +179,7 @@ var getInitialCommunities = function() {
 
 	var maxCoreValue = Math.max(...currentCoreValues);
 
-	var toleranceFactor = 0.15;
+	var toleranceFactor = 0.85;
 
 	for(var i=0; i < currentCoreValues.length; i++) {
 		if((maxCoreValue > (currentCoreValues[i]-toleranceFactor)) && (maxCoreValue < (currentCoreValues[i]+toleranceFactor))) {
@@ -232,7 +236,11 @@ var expandCommunities = function(c) {
 	for(var i=0; i<nbForEachCommunity.length; i++) {
 		var nbList = nbForEachCommunity[i];
 		for(var j=0; j<nbList.length; j++) {
-			var compactness = getCompactness(nbList[j], c[i]);
+			if(byCompactness) {
+				var compactness = getCompactness(nbList[j], c[i]);
+			} else if (bySimilarity) {
+				var compactness = getSimilarityIndex(nbList[j], c[i]);
+			}
 			if(compactness > Bc) {
 				Nv.push(nbList[j]);
 			} else if(compactness <= Bc && compactness >= Bl) {
@@ -301,6 +309,7 @@ var com;
 // Load the directed acyclic graph file
 $.ajax({
 	url: "../directed_networks/network_100.dat",
+	// url: "dag.txt",
 	success: function (data) {
 
 		// preProcessInputData(data);
@@ -325,7 +334,7 @@ $.ajax({
 
 		// Display the core values in console.
 		computedCoreValuesObject = {"core Values": computedCoreValues};
-		console.log("Computed core values: ", computedCoreValuesObject);
+		console.log("Computed core values: ", getCoreValues());
 
 		// Sort the core values array in decreasing order.
 		computedCoreValues.sort(function(a, b){return b-a});
@@ -362,7 +371,7 @@ $.ajax({
 			method: "POST",
 			data: {data: data},
 			success: function(data) {
-				console.log(data);
+				// console.log(data);
 			}
 		})
 
